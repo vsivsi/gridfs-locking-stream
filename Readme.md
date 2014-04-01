@@ -209,7 +209,7 @@ stream.renewLock(function (e,d) {
 });
 ```
 
-For more information on the topics below, see the documentation for the [gridfs-locks](https://www.npmjs.org/package/gridfs-locks) package.
+For more information on the locking implementation, see the documentation for the [gridfs-locks](https://www.npmjs.org/package/gridfs-locks) package.
 
 ## accessing file and lock metadata
 
