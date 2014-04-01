@@ -2,9 +2,9 @@
 
 Easily stream files to and from MongoDB [GridFS](http://www.mongodb.org/display/DOCS/GridFS) with concurrency safe read/write access.
 
-This package is necessary because [GridFS is not inherently safe for concurrent accesses to a file](https://jira.mongodb.org/browse/NODE-157). The robust concurrency support this package adds uses a distributed multiple-reader/exclusive-writer model for locking, with fair write-requests to prevent starvation by heavy reader traffic. You can read more about how it works in the [gridfs-locks](https://www.npmjs.org/package/gridfs-locks) package documentation. This package is a slightly modified, concurrency friendly modification of the API from the excellent [gridfs-stream](https://www.npmjs.org/package/gridfs-stream) package by [@aaron](https://www.npmjs.org/~aaron).
+This package is necessary because [GridFS is not inherently safe for concurrent accesses to a file](https://jira.mongodb.org/browse/NODE-157). The robust concurrency support this package adds uses a distributed multiple-reader/exclusive-writer model for locking, with fair write-requests to prevent starvation by heavy reader traffic. You can read more about how it works in the [gridfs-locks](https://www.npmjs.org/package/gridfs-locks) package documentation. This package is a slightly modified, concurrency friendly revision of the API from the excellent [gridfs-stream](https://www.npmjs.org/package/gridfs-stream) package by [@aaron](https://www.npmjs.org/~aaron).
 
-## install
+## Install
 
 ```
 npm install gridfs-locking-stream
@@ -14,7 +14,7 @@ npm test
 
 ## Differences from gridfs-stream
 
-If you use gridfs-stream but need [concurrency safe access to GridFS files](https://jira.mongodb.org/browse/NODE-157), you'll be pleased to learn that the API of gridfs-locking-stream is about 97% the same. Both libraries use gridfs-stream's underlying `ReadStream` and `WriteStream` classes, and gridfs-locking-stream passes the gridfs-stream unit tests, with a few changes needed to accommodate a small number of API differences.
+If you use gridfs-stream but need [concurrency safe access to GridFS files](https://jira.mongodb.org/browse/NODE-157), you'll be pleased to learn that the API of gridfs-locking-stream is about 97% the same. Both libraries use gridfs-stream's underlying `ReadStream` and `WriteStream` classes, and gridfs-locking-stream passes the gridfs-stream unit tests, with a few changes needed to accommodate the small number of API differences.
 
 For example:
 
@@ -53,7 +53,6 @@ gfs.files.findOne({"filename": "my_file.txt"}, {‘_id’:1}, function(e, d) {
     fileID = d._id;
   }
 });
-
 ```
 
 The other main difference from gridfs-stream is that each instance of `Grid` is tied to a given named GridFS collection when it is created, and this cannot be changed during the object's lifetime. This change is necessary to associate the correct [gridfs-locks](https://www.npmjs.org/package/gridfs-locks) collection with each instance of `Grid`. In gridfs-locking-stream, the `Grid` constructor function can take an optional third parameter to specify a GridFS collection root name that is different from the default (`"fs"`):
@@ -62,7 +61,7 @@ The other main difference from gridfs-stream is that each instance of `Grid` is 
 
 gridfs-stream allows the GridFS collection to be changed on-the-fly using either the `{ root: "myroot" }` option when streams are created, or by using the `Grid.collection('myroot')` method to change the default collection. In gridfs-locking-stream the `.collection()` method is eliminated and attempting to create a stream with a `{ root: "myroot" }` option that is different from the `Grid` object's initial root with produce an error. If access to multiple GridFS collections is required, simply create multiple `Grid` object instances.
 
-## use
+## Use
 
 ```js
 var mongo = require('mongodb');
@@ -85,7 +84,7 @@ The `gridfs-locking-stream` module exports a constructor that accepts an open [m
 
 Now we're ready to start streaming.
 
-## createWriteStream
+### createWriteStream
 
 To stream data to GridFS we call `createWriteStream` passing any options.
 
@@ -125,7 +124,7 @@ writestream.on('close', function (file) {
 });
 ```
 
-## createReadStream
+### createReadStream
 
 To stream data out of GridFS we call `createReadStream` passing any options, at least an `_id`.
 
@@ -140,7 +139,7 @@ if (readstream) {
 
 See the options of `createWriteStream` for more information.
 
-## removing files
+### removing files
 
 Files can be removed by passing options (at least an `_id`) to the `remove()` method.
 
@@ -214,7 +213,7 @@ stream.renewLock(function (e,d) {
 
 For more information on the topics below, see the documentation for the [gridfs-locks](https://www.npmjs.org/package/gridfs-locks) package.
 
-## accessing file metadata
+## accessing file and lock metadata
 
 All file meta-data (file name, upload date, contentType, etc) are stored in a special mongodb collection separate from the actual file data. This collection can be queried directly:
 
@@ -223,7 +222,17 @@ All file meta-data (file name, upload date, contentType, etc) are stored in a sp
   gfs.files.find({ filename: 'myImage.png' }).toArray(function (err, files) {
     if (err) ...
     console.log(files);
-  })
+  });
+```
+
+The lock documents for the files in a collection can also be accessed:
+
+```js
+  var gfs = Grid(conn.db);
+  gfs.locks.findOne({ files_id: '50e03d29edfdc00d34000001' }, function (err, doc) {
+    if (err) ...
+    console.log(doc);
+  });
 ```
 
 ## using with mongoose
