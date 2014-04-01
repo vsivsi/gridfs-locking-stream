@@ -2,7 +2,7 @@
 
 Easily stream files to and from MongoDB [GridFS](http://www.mongodb.org/display/DOCS/GridFS) with concurrency safe read/write access.
 
-This package is necessary because [GridFS is not inherently safe for concurrent accesses to a file](https://jira.mongodb.org/browse/NODE-157). The robust concurrency support this package adds uses a distributed multiple-reader/exclusive-writer model for locking, with fair write-requests to prevent starvation by heavy reader traffic. You can read more about how it works in the [gridfs-locks](https://www.npmjs.org/package/gridfs-locks) package documentation. This package is a slightly modified, concurrency friendly revision of the API from the excellent [gridfs-stream](https://www.npmjs.org/package/gridfs-stream) package by [@aaron](https://www.npmjs.org/~aaron).
+Because [GridFS is not inherently safe for concurrent accesses to a file](https://jira.mongodb.org/browse/NODE-157), this package adds robust concurrency support to the excellent [gridfs-stream](https://www.npmjs.org/package/gridfs-stream) package by [@aaron](https://www.npmjs.org/~aaron). It is basically gridfs-stream + [gridfs-locks](https://www.npmjs.org/package/gridfs-locks), with a few minor "concurrency friendly" revisions to the gridfs-stream API.
 
 ## Install
 
@@ -102,8 +102,7 @@ Options may contain zero or more of the following options, for more information 
 {
     _id: '50e03d29edfdc00d34000001', // a MongoDb ObjectId, if omitted on writes a new file will be created
     filename: 'my_file.txt', // a filename, not used as an identifier
-    mode: 'w', // default value: w+, possible options: w, w+, or r, 
-               // see [GridStore](http://mongodb.github.com/node-mongodb-native/api-generated/gridstore.html)
+    mode: 'w', // default value: w+, possible options: w, w+, or r
 
     // any other options from the GridStore may be passed too, e.g.:
 
@@ -161,16 +160,20 @@ Any of the following may be added to the options object passed to `createReadStr
 
 ```js
 {
-  timeOut: 30,          // seconds to poll when obtaining a lock that is not available.  Default: Do not poll
-  pollingInterval: 5,   // seconds between successive attempts to acquire a lock while waiting  Default: 5 sec
-  lockExpiration: 300,  // seconds until a lock expires in the database  Default: Never expire
-  metaData: null        // metadata to store in the lock documents, useful for debugging  Default: null
+  timeOut: 30,          // seconds to poll for an unavailable lock.
+                        // Default: Do not poll
+  pollingInterval: 5,   // seconds between successive attempts to acquire a lock.
+                        // Default: 5 sec
+  lockExpiration: 300,  // seconds until a lock expires in the database
+                        // Default: Never expire
+  metaData: null        // metadata to store with lock, useful for debugging.
+                        // Default: null
 }
 ```
 
 By default, if the appropriate type of lock is not available when `createReadStream`, `createWriteStream` or `remove` are called, then they return immediately with a `null` result. If you wish to automatically poll for the required lock to become available, set the `timeOut` and `pollingInterval` options to appropriate values for your application. If `timeOut` seconds pass without obtaining the required lock, a null result will be returned.
 
-If [deadlock](https://en.wikipedia.org/wiki/Deadlock) or dying lock-holding processes are an issue for your application, you may find the `lockExpiration` option to be useful. Note that when this operation is used, the lock holder is responsible for finishing its use of the stream before the time expires. See `stream.renewLock()` below.
+If [deadlocks](https://en.wikipedia.org/wiki/Deadlock) or dead lock-holding processes are an issue for your application, you may find the `lockExpiration` option to be useful. Note that when this option is used, the lock holder is responsible for finishing its use of the stream before the time expires. See `stream.renewLock()` below.
 
 Streams returned by `createReadStream` and `createWriteStream` each have three additional methods which can be used to inspect and change the status of the lock on a stream. Normally the acquisition and releasing of locks will be handled automatically when streams are created and end. However, depending on how the stream is accessed and the lock options being used, some special handling may be necessary.
 
