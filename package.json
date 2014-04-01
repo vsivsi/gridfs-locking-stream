@@ -1,0 +1,37 @@
+{
+  "author": "Vaughn Iverson",
+  "name": "gridfs-locking-stream",
+  "description": "Writable/Readable Nodejs compatible GridFS streams with locking for safe concurrent access",
+  "version": "0.0.1",
+  "keywords": [
+    "mongodb",
+    "mongoose",
+    "mongo",
+    "gridfs",
+    "gridfs-stream",
+    "gridfs-locks",
+    "grid",
+    "locks",
+    "locking",
+    "lock"
+  ],
+  "scripts": {
+    "test": "make test"
+  },
+  "dependencies": {
+    "gridfs-stream": "0.4.1",
+    "gridfs-locks": ">=0.0.5"
+  },
+  "devDependencies": {
+    "mocha": "*",
+    "mongodb": "1.3.23"
+  },
+  "optionalDependencies": {},
+  "engines": {
+    "node": ">= 0.10.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/vsivsi/gridfs-locking-stream.git"
+  }
+}
