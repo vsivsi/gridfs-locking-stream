@@ -69,12 +69,14 @@ Grid.prototype.createWriteStream = function (options, callback) {
       if (err) { return callback(err); }
       if (!l) { return callback(null, null); }
       var stream = new GridWriteStream(self, options);
-      _gridfs_lock = lock;
       stream.releaseLock = function (callback) {
         lock.releaseLock(callback || function () {});
       }
       stream.renewLock = function (callback) {
         lock.renewLock(callback || function () {});
+      }
+      stream.heldLock = function () {
+        return lock.heldLock;
       }
       stream.on('error', function (err) {
         lock.releaseLock(function (err) {
@@ -131,12 +133,14 @@ Grid.prototype.createReadStream = function (options, callback) {
       if (err) { return callback(err); }
       if (!l) { return callback(null, null); }
       var stream = new GridReadStream(self, options);
-      stream._gridfs_lock = lock;
       stream.releaseLock = function (callback) {
         lock.releaseLock(callback || function () {});
       }
       stream.renewLock = function (callback) {
         lock.renewLock(callback || function () {});
+      }
+      stream.heldLock = function () {
+        return lock.heldLock;
       }
       stream.on('error', function (err) {
         lock.releaseLock(function (err) {
@@ -226,14 +230,18 @@ Grid.prototype.remove = function (options, callback) {
     lock.obtainWriteLock(function (err, l) {
       if (err) { return callback(err); }
       if (!l) {
-        return callback(new Error('Remove failed due to failure to obtain write lock\nGridFS ' + self.root + " _id " + options._id));
+        return callback(null);
       }
       self.mongo.GridStore.unlink(self.db, _id, options, function (err) {
         lock.releaseLock(function (err2) {
           if (err2) {
             console.warn('Warning! releaseLock() failed for GridFS ' + self.root + " _id " + options._id);
           }
-          callback(err);
+          if (err || err2) {
+          	callback(err || err2);
+          } else {
+          	callback(null, true);
+          }
         });
       });
     });
