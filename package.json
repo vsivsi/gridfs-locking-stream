@@ -35,9 +35,6 @@
     "type": "git",
     "url": "git://github.com/vsivsi/gridfs-locking-stream.git"
   },
-  "engine": {
-    "node": ">=0.10"
-  },
   "readmeFilename": "Readme.md",
   "bugs": {
     "url": "https://github.com/vsivsi/gridfs-locking-stream/issues"
