@@ -11,7 +11,6 @@ var assert = require('assert')
   , server
   , db
 
-
 describe('test', function(){
   var id;
   before(function (done) {
