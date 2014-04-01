@@ -43,7 +43,7 @@ readstream.on('error', function (err) {
 readstream.pipe(response);
 ```
 
-One of the main differences from gridfs-stream is that you must create a `ReadStream` using a file's unique `_id` (not a filename). This is because filenames aren't required to be unique within a GridFS collection, and so robust locking based on filenames alone isn't possible. Likewise, if you want to modify (append/overwrite) or delete a file, you also need to use an `_id` for the same reasons. As an aside, it was never a good practice for most applications to use filenames as identifiers in GridFS, and so this change is for the best. You can easily find a file's `_id` by filename (or any other metadata) by using the Grid's `.files` mongodb collection:
+One of the main differences from gridfs-stream is that you must create a `ReadStream` using a file's unique `_id` (not a filename). This is because filenames aren't required to be unique within a GridFS collection, and so robust locking based on filenames alone isn't possible. Likewise, if you want to append to, overwrite or delete a file, you also need to use an `_id`. As an aside, it was never a good practice for most applications to use filenames as identifiers in GridFS, so this change is probably for the best. You can easily find a file's `_id` by filename (or any other metadata) by using the Grid's `.files` mongodb collection:
 
 ```js
 gfs.files.findOne({"filename": "my_file.txt"}, {‘_id’:1}, function(e, d) {
