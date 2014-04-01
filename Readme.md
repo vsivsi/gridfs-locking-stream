@@ -2,7 +2,7 @@
 
 Easily stream files to and from MongoDB [GridFS](http://www.mongodb.org/display/DOCS/GridFS) with concurrency safe read/write access.
 
-This package is necessary because [GridFS is not inherently safe for concurrent accesses to a file.](https://jira.mongodb.org/browse/NODE-157). The robust concurrency support this package adds to uses a distributed multiple-reader/exclusive-writer model for locking, with fair write-requests to prevent starvation by continuous reader traffic. You can read more about how it works in the [gridfs-locks](https://www.npmjs.org/package/gridfs-locks) package documentation. This package is slightly modified, concurrency friendly, API built over the excellent [gridfs-stream](https://www.npmjs.org/package/gridfs-stream) package by [@aaron](https://www.npmjs.org/~aaron).
+This package is necessary because [GridFS is not inherently safe for concurrent accesses to a file](https://jira.mongodb.org/browse/NODE-157). The robust concurrency support this package adds uses a distributed multiple-reader/exclusive-writer model for locking, with fair write-requests to prevent starvation by heavy reader traffic. You can read more about how it works in the [gridfs-locks](https://www.npmjs.org/package/gridfs-locks) package documentation. This package is a slightly modified, concurrency friendly modification of the API from the excellent [gridfs-stream](https://www.npmjs.org/package/gridfs-stream) package by [@aaron](https://www.npmjs.org/~aaron).
 
 ## install
 
