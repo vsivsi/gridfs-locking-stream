@@ -46,7 +46,7 @@ readstream.pipe(response);
 One of the main differences from gridfs-stream is that you must create a read stream using a file's unique `_id` (not a filename). This is because filenames aren't required to be unique within a GridFS collection, and so robust locking based on filenames alone isn't possible. Likewise, if you want to append to, overwrite or delete an existing file, you also need to use an `_id`. The only case where omitting the `_id` is okay is when a new file is being written (because in this case a new `_id` is automatically generated.) As an aside, it was never good practice for most applications to use filenames as identifiers in GridFS, so this change is probably for the best. You can easily find a file's `_id` by filename (or any other metadata) by using the Grid's `.files` mongodb collection:
 
 ```js
-gfs.files.findOne({"filename": "my_file.txt"}, {‘_id’:1}, function(e, d) {
+gfs.files.findOne({"filename": "my_file.txt"}, {"_id":1}, function(e, d) {
   if (e || !d) {
     // error or file not found
   } else {
@@ -100,9 +100,10 @@ if (writestream) {
 Options may contain zero or more of the following options, for more information see [GridStore](http://mongodb.github.com/node-mongodb-native/api-generated/gridstore.html):
 ```js
 {
-    _id: '50e03d29edfdc00d34000001', // a MongoDb ObjectId, if omitted a new file will always be created
+    _id: '50e03d29edfdc00d34000001', // a MongoDb ObjectId, if omitted on writes a new file will be created
     filename: 'my_file.txt', // a filename, not used as an identifier
-    mode: 'w', // default value: w+, possible options: w, w+, or r, see [GridStore](http://mongodb.github.com/node-mongodb-native/api-generated/gridstore.html)
+    mode: 'w', // default value: w+, possible options: w, w+, or r, 
+               // see [GridStore](http://mongodb.github.com/node-mongodb-native/api-generated/gridstore.html)
 
     // any other options from the GridStore may be passed too, e.g.:
 
@@ -154,7 +155,7 @@ See the options of `createWriteStream` for more information.
 
 ## Locking options
 
-There are a few additional options and methods to allow locking to be customized and which are used to handle special situations. 
+There are a few additional options and methods to allow locking to be customized and which are used to handle special situations.
 
 Any of the following may be added to the options object passed to `createReadStream`, `createWriteStream` and `remove`:
 
@@ -167,7 +168,7 @@ Any of the following may be added to the options object passed to `createReadStr
 }
 ```
 
-By default, if the appropriate type of lock is not available when `createReadStream`, `createWriteStream` or `remove` are called, then they return immediately with a `null` result. If you wish to automatically poll for the required lock to become available, set the `timeOut` and `pollingInterval` options to the appropriate values for your application. If the timeOut period passes without obtaining the required lock, a null result will be returned.
+By default, if the appropriate type of lock is not available when `createReadStream`, `createWriteStream` or `remove` are called, then they return immediately with a `null` result. If you wish to automatically poll for the required lock to become available, set the `timeOut` and `pollingInterval` options to appropriate values for your application. If `timeOut` seconds pass without obtaining the required lock, a null result will be returned.
 
 If [deadlock](https://en.wikipedia.org/wiki/Deadlock) or dying lock-holding processes are an issue for your application, you may find the `lockExpiration` option to be useful. Note that when this operation is used, the lock holder is responsible for finishing its use of the stream before the time expires. See `stream.renewLock()` below.
 
