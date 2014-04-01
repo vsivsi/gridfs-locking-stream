@@ -43,7 +43,7 @@ readstream.on('error', function (err) {
 readstream.pipe(response);
 ```
 
-One of the main differences from gridfs-stream is that you must create a `ReadStream` using a file's unique `_id` (not a filename). This is because filenames aren't required to be unique within a GridFS collection, and so robust locking based on filenames alone isn't possible. Likewise, if you want to append to, overwrite or delete a file, you also need to use an `_id`. As an aside, it was never a good practice for most applications to use filenames as identifiers in GridFS, so this change is probably for the best. You can easily find a file's `_id` by filename (or any other metadata) by using the Grid's `.files` mongodb collection:
+One of the main differences from gridfs-stream is that you must create a read stream using a file's unique `_id` (not a filename). This is because filenames aren't required to be unique within a GridFS collection, and so robust locking based on filenames alone isn't possible. Likewise, if you want to append to, overwrite or delete an existing file, you also need to use an `_id` with. As an aside, it was never a good practice for most applications to use filenames as identifiers in GridFS, so this change is probably for the best. You can easily find a file's `_id` by filename (or any other metadata) by using the Grid's `.files` mongodb collection:
 
 ```js
 gfs.files.findOne({"filename": "my_file.txt"}, {‘_id’:1}, function(e, d) {
@@ -55,11 +55,11 @@ gfs.files.findOne({"filename": "my_file.txt"}, {‘_id’:1}, function(e, d) {
 });
 ```
 
-The other main difference from gridfs-stream is that each instance of `Grid` is tied to a given named GridFS collection when it is created, and this cannot be changed during the object's lifetime. This change is necessary to associate the correct [gridfs-locks](https://www.npmjs.org/package/gridfs-locks) collection with each instance of `Grid`. In gridfs-locking-stream, the `Grid` constructor function can take an optional third parameter to specify a GridFS collection root name that is different from the default (`"fs"`):
+The other main difference from gridfs-stream is that each instance of `Grid` is tied to a specific named GridFS collection when it is created, and this cannot be changed during the `Grid` object's lifetime. This change is necessary to associate the correct [gridfs-locks](https://www.npmjs.org/package/gridfs-locks) collection with each instance of `Grid`. In gridfs-locking-stream, the `Grid` constructor function can take an optional third parameter to specify a GridFS collection root name that is different from the default of `"fs"`:
 
      gfs = Grid(db, mongo, "myroot");
 
-gridfs-stream allows the GridFS collection to be changed on-the-fly using either the `{ root: "myroot" }` option when streams are created, or by using the `Grid.collection('myroot')` method to change the default collection. In gridfs-locking-stream the `.collection()` method is eliminated and attempting to create a stream with a `{ root: "myroot" }` option that is different from the `Grid` object's initial root with produce an error. If access to multiple GridFS collections is required, simply create multiple `Grid` object instances.
+gridfs-stream allowed the GridFS collection to be changed on-the-fly using either the `{ root: "myroot" }` option when streams are created, or by using the `Grid.collection('myroot')` method to change the default collection. In gridfs-locking-stream the `.collection()` method has been eliminated and attempting to create a stream with a `{ root: "myroot" }` option that is different from the `Grid` object's initial root name will throw an error. If access to multiple GridFS collections is required, simply create multiple `Grid` object instances.
 
 ## Use
 
@@ -126,7 +126,7 @@ writestream.on('close', function (file) {
 
 ### createReadStream
 
-To stream data out of GridFS we call `createReadStream` passing any options, at least an `_id`.
+To stream data out of GridFS we call `createReadStream` passing any options, but at least a valid `_id`.
 
 ```js
 var readstream = gfs.createReadStream(options);
@@ -139,7 +139,7 @@ if (readstream) {
 
 See the options of `createWriteStream` for more information.
 
-### removing files
+### remove
 
 Files can be removed by passing options (at least an `_id`) to the `remove()` method.
 
@@ -165,7 +165,6 @@ Any of the following may be added to the options object passed to `createReadStr
   lockExpiration: 300,  // seconds until a lock expires in the database  Default: Never expire
   metaData: null        // metadata to store in the lock documents, useful for debugging  Default: null
 }
-
 ```
 
 By default, if the appropriate type of lock is not available when `createReadStream`, `createWriteStream` or `remove` are called, then they return immediately with a `null` result. If you wish to automatically poll for the required lock to become available, set the `timeOut` and `pollingInterval` options to the appropriate values for your application. If the timeOut period passes without obtaining the required lock, a null result will be returned.
@@ -208,7 +207,6 @@ stream.renewLock(function (e,d) {
   };
   // d contains the new lock document
 });
-
 ```
 
 For more information on the topics below, see the documentation for the [gridfs-locks](https://www.npmjs.org/package/gridfs-locks) package.
