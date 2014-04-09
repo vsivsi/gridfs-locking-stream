@@ -46,10 +46,15 @@ function Grid (db, mongo, root) {
 Grid.prototype.createLockCollection = function (options, callback) {
   var self = this;
   self.root = options.root;
-  LockCollection.create(self.db, self.root, options, function (err, lockColl) {
-    if (err) { return callback(err); }
-    self._locks = lockColl;
-    callback(null);
+  var lockColl = LockCollection(self.db, options).once('ready',
+    function () {
+      self._locks = lockColl;
+      lockColl.removeAllListeners();
+      callback(null);
+    }
+  ).once('error', function (err) {
+    lockColl.removeAllListeners();
+    return callback(err);
   });
 }
 
@@ -64,35 +69,42 @@ Grid.prototype.createWriteStream = function (options, callback) {
   var self = this;
 
   function lockAndWrite() {
-    var lock = new Lock(options._id, self._locks, options);
-    lock.obtainWriteLock(function (err, l) {
-      if (err) { return callback(err); }
-      if (!l) { return callback(null, null); }
-      var stream = new GridWriteStream(self, options);
-      stream.releaseLock = function (callback) {
-        lock.releaseLock(callback || function () {});
-      }
-      stream.renewLock = function (callback) {
-        lock.renewLock(callback || function () {});
-      }
-      stream.heldLock = function () {
-        return lock.heldLock;
-      }
-      stream.on('error', function (err) {
-        lock.releaseLock(function (err) {
-          if (err) {
-            console.warn('Warning! releaseLock() failed for GridFS ' + self.root + " _id " + options._id);
+    var lock = Lock(options._id, self._locks, options);
+    lock.obtainWriteLock().on('locked',
+      function (l) {
+        var stream = new GridWriteStream(self, options);
+        stream.releaseLock = function (callback) {
+          lock.releaseLock();
+          if (callback) {
+            lock.once('released', function (l) { lock.removeAllListeners(); callback(null, l); });
+            lock.once('error', function (e) { lock.removeAllListeners(); callback(e); });
           }
-        });
-      }).on('close', function (file) {
-        lock.releaseLock(function (err) {
-          if (err) {
-            console.warn('Warning! releaseWriteLock() failed for GridFS ' + self.root + " _id " + options._id);
+        }
+        stream.renewLock = function (callback) {
+          lock.renewLock();
+          if (callback) {
+            lock.once('renewed', function (l) { lock.removeAllListeners(); callback(null, l); });
+            lock.once('error', function (e) { lock.removeAllListeners(); callback(e); });
           }
+        }
+        stream.heldLock = function () {
+          return lock.heldLock;
+        }
+        stream.on('error', function (err) {
+          lock.releaseLock();
+        }).on('close', function (file) {
+          lock.releaseLock();
         });
-      });
-      callback(null, stream, l);
-    });
+        lock.removeAllListeners();
+        callback(null, stream, l);
+      }
+    ).once('timed-out', function () {
+        callback(null, null);
+      }
+    ).once('error', function (err) {
+        callback(err);
+      }
+    );
   }
 
   if (!options._id) {
@@ -128,35 +140,41 @@ Grid.prototype.createReadStream = function (options, callback) {
   var self = this;
 
   function lockAndRead() {
-    var lock = new Lock(options._id, self._locks, options);
-    lock.obtainReadLock(function (err, l) {
-      if (err) { return callback(err); }
-      if (!l) { return callback(null, null); }
-      var stream = new GridReadStream(self, options);
-      stream.releaseLock = function (callback) {
-        lock.releaseLock(callback || function () {});
-      }
-      stream.renewLock = function (callback) {
-        lock.renewLock(callback || function () {});
-      }
-      stream.heldLock = function () {
-        return lock.heldLock;
-      }
-      stream.on('error', function (err) {
-        lock.releaseLock(function (err) {
-          if (err) {
-            console.warn('Warning! releaseLock() failed for GridFS ' + self.root + " _id " + options._id);
+    var lock = Lock(options._id, self._locks, options);
+    lock.obtainReadLock().on('locked',
+      function (l) {
+        var stream = new GridReadStream(self, options);
+        stream.releaseLock = function (callback) {
+          lock.releaseLock();
+          if (callback) {
+            lock.once('released', function (l) { lock.removeAllListeners(); callback(null, l); });
+            lock.once('error', function (e) { lock.removeAllListeners(); callback(e); });
           }
-        });
-      }).on('end', function (file) {
-        lock.releaseLock(function (err) {
-          if (err) {
-            console.warn('Warning! releaseLock() failed for GridFS ' + self.root + " _id " + options._id);
+        }
+        stream.renewLock = function (callback) {
+          lock.renewLock();
+          if (callback) {
+            lock.once('renewed', function (l) { lock.removeAllListeners(); callback(null, l); });
+            lock.once('error', function (e) { lock.removeAllListeners(); callback(e); });
           }
+        }
+        stream.heldLock = function () {
+          return lock.heldLock;
+        }
+        stream.on('error', function (err) {
+          lock.releaseLock();
+        }).on('end', function (file) {
+          lock.releaseLock();
         });
-      });
-      callback(null, stream, l);
-    });
+        lock.removeAllListeners();
+        callback(null, stream, l);
+    }).once('timed-out', function () {
+        callback(null, null);
+      }
+    ).once('error', function (err) {
+        callback(err);
+      }
+    );
   }
 
   if (!options._id) {
@@ -226,25 +244,20 @@ Grid.prototype.remove = function (options, callback) {
   var _id = self.tryParseObjectId(options._id) || options._id;
 
   function lockAndRemove() {
-    var lock = new Lock(options._id, self._locks, options);
-    lock.obtainWriteLock(function (err, l) {
-      if (err) { return callback(err); }
-      if (!l) {
-        return callback(null);
-      }
-      self.mongo.GridStore.unlink(self.db, _id, options, function (err) {
-        lock.releaseLock(function (err2) {
-          if (err2) {
-            console.warn('Warning! releaseLock() failed for GridFS ' + self.root + " _id " + options._id);
-          }
-          if (err || err2) {
-          	callback(err || err2);
-          } else {
-          	callback(null, true);
-          }
-        });
+    var lock = Lock(options._id, self._locks, options);
+    lock.obtainWriteLock().once('locked',
+      function () {
+        self.mongo.GridStore.unlink(self.db, _id, options, function (err) {
+          if (err) { lock.releaseLock(); return callback(err); }
+          lock.removeLock().on('removed', function () { callback(null, true); });
       });
-    });
+    }).once('timed-out', function () {
+        callback(null, null);
+      }
+    ).once('error', function (err) {
+        callback(err);
+      }
+    );
   }
 
   if (options.root && self.root !== options.root) {

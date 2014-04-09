@@ -98,9 +98,9 @@ describe('test', function(){
       assert(ws.name == 'logo.png')
     })
     describe('options', function(){
-      it('should have six keys', function(){
-        console.log("Keys: " + Object.keys(ws.options))
-        assert(Object.keys(ws.options).length === 6);
+      it('should have four keys', function(){
+        // console.log("Keys: " + Object.keys(ws.options));
+        assert(Object.keys(ws.options).length === 4);
       });
       it('limit should be Infinity', function(){
         assert(ws.options.limit === Infinity)
@@ -258,9 +258,10 @@ describe('test', function(){
       assert.equal(rs.id, id);
     })
     describe('options', function(){
-      it('should have three keys', function(done) {
+      it('should have two keys', function(done) {
         g.createReadStream({ _id: id }, function(e, rs) {
-          assert(Object.keys(rs.options).length === 3);
+          // console.log("Keys: " + Object.keys(rs.options))
+          assert(Object.keys(rs.options).length === 2);
           done();
         });
       });
