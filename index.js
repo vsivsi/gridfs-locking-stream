@@ -96,6 +96,8 @@ Grid.prototype.createWriteStream = function (options, callback) {
           lock.releaseLock();
         });
         lock.removeAllListeners();
+        lock.on('expires-soon', function () { stream.emit('expires-soon'); });
+        lock.on('expired', function () { stream.destroy(); stream.emit('expired'); });
         callback(null, stream, l);
       }
     ).once('timed-out', function () {
@@ -167,6 +169,8 @@ Grid.prototype.createReadStream = function (options, callback) {
           lock.releaseLock();
         });
         lock.removeAllListeners();
+        lock.on('expires-soon', function () { stream.emit('expires-soon'); });
+        lock.on('expired', function () { stream.destroy(); stream.emit('expired'); });
         callback(null, stream, l);
     }).once('timed-out', function () {
         callback(null, null);
