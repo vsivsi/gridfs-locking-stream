@@ -154,7 +154,7 @@ See the options of `createWriteStream` for more information.
 
 ## Locking options
 
-There are a few additional options and methods to allow locking to be customized and which are used to handle special situations.
+There are a few additional options and methods that allow locking to be customized and which are used to handle special situations.
 
 Any of the following may be added to the options object passed to `createReadStream`, `createWriteStream` and `remove`:
 
