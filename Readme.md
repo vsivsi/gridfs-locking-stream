@@ -24,24 +24,28 @@ var Grid = require('gridfs-stream');
 var gfs = Grid(db, mongo);
 
 // streaming to gridfs
-var writestream = gfs.createWriteStream({
-    filename: 'my_file.txt'    // A fileID will be automatically created
-});
-fs.createReadStream('/some/path').pipe(writestream);
+gfs.createWriteStream({ filename: 'my_file.txt' },  // A fileID will be automatically created
+  function (err, writestream) {
+    // Handle errors, etc.
+    fs.createReadStream('/some/path').pipe(writestream);
+  }
+ );
 
 // streaming from gridfs
-var readstream = gfs.createReadStream({
-  _id: '50e03d29edfdc00d34000001'
-});
-
-// error handling, e.g. file does not exist
-readstream.on('error', function (err) {
-  console.log('An error occurred!', err);
-  throw err;
-});
-
-readstream.pipe(response);
+gfs.createReadStream({ _id: '50e03d29edfdc00d34000001' },
+  function (err, readstream) {
+    // Handle errors, etc.
+    readstream.pipe(fs.createWriteStream('/some/path'))
+              .on('error', function (err) {
+                console.log('An error occurred!', err);
+                throw err;
+              });
+  }
+);
 ```
+
+The first thing to notice in the above code snippet is that the `createXStream` methods require callbacks in gridfs-locking stream whereas they don't in gridfs-stream. This is to allow for initializing
+the locks collection as necessary.
 
 One of the main differences from gridfs-stream is that you must create a read stream using a file's unique `_id` (not a filename). This is because filenames aren't required to be unique within a GridFS collection, and so robust locking based on filenames alone isn't possible. Likewise, if you want to append to, overwrite or delete an existing file, you also need to use an `_id`. The only case where omitting the `_id` is okay is when a new file is being written (because in this case a new `_id` is automatically generated.) As an aside, it was never good practice for most applications to use filenames as identifiers for GridFS, so this change is probably for the best. You can easily find a file's `_id` by filename (or any other metadata) by using the Grid's `.files` mongodb collection:
 
@@ -89,12 +93,13 @@ Now we're ready to start streaming.
 To stream data to GridFS we call `createWriteStream` passing any options.
 
 ```js
-var writestream = gfs.createWriteStream([options]);
-if (writestream) {
-  fs.createReadStream('/some/path').pipe(writestream);
-} else {
-  // Stream couldn't be created because a write lock was not available
-}
+gfs.createWriteStream([options], function (error, writestream) {
+  if (writestream) {
+    fs.createReadStream('/some/path').pipe(writestream);
+  } else {
+    // Stream couldn't be created because a write lock was not available
+  }
+});
 ```
 
 Options may contain zero or more of the following options, for more information see [GridStore](http://mongodb.github.com/node-mongodb-native/api-generated/gridstore.html):
@@ -129,12 +134,13 @@ writestream.on('close', function (file) {
 To stream data out of GridFS we call `createReadStream` passing any options, but at least a valid `_id`.
 
 ```js
-var readstream = gfs.createReadStream(options);
-if (readstream) {
-  readstream.pipe(response);
-} else {
-  // Stream couldn't be created because a read lock was not available
-}
+gfs.createReadStream([options], function (error, readstream) {
+  if (readstream) {
+    readstream.pipe(response);
+  } else {
+    // Stream couldn't be created because a read lock was not available
+  }
+});
 ```
 
 See the options of `createWriteStream` for more information.
