@@ -151,8 +151,12 @@ Files can be removed by passing options (at least an `_id`) to the `remove()` me
 
 ```js
 gfs.remove([options], function (err, result) {
-  if (err) return handleError(err);
-  if (result) console.log('success');
+  if (err) { return handleError(err); }
+  if (result) {
+    console.log('success');
+  } else {
+    console.log('failed');  // Due to failure to get a write lock
+  }
 });
 ```
 
