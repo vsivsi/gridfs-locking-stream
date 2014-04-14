@@ -150,7 +150,7 @@ See the options of `createWriteStream` for more information.
 Files can be removed by passing options (at least an `_id`) to the `remove()` method.
 
 ```js
-gfs.remove(options, function (err, result) {
+gfs.remove([options], function (err, result) {
   if (err) return handleError(err);
   if (result) console.log('success');
 });

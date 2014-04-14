@@ -1,3 +1,8 @@
+0.1.2
+==================
+
+* Updated documentation to reflect use of callbacks for createReadStream and createWriteStream
+
 0.1.1
 ==================
 
