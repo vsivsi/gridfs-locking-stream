@@ -1,3 +1,8 @@
+0.1.3
+==================
+
+* Updated documentation to improve formatting of code blocks on npmjs.org
+
 0.1.2
 ==================
 

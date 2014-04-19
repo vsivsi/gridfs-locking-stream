@@ -12,60 +12,9 @@ npm install gridfs-locking-stream
 npm test
 ```
 
-## Differences from gridfs-stream
-
-If you use gridfs-stream but need [concurrency safe access to GridFS files](https://jira.mongodb.org/browse/NODE-157), you'll be pleased to learn that the API of gridfs-locking-stream is about 97% the same. Both libraries use gridfs-stream's underlying `ReadStream` and `WriteStream` classes, and gridfs-locking-stream passes the gridfs-stream unit tests, with a few changes needed to accommodate the small number of API differences.
-
-For example:
-
-```js
-var mongo = require('mongodb');
-var Grid = require('gridfs-stream');
-var gfs = Grid(db, mongo);
-
-// streaming to gridfs
-gfs.createWriteStream({ filename: 'my_file.txt' },  // A fileID will be automatically created
-  function (err, writestream) {
-    // Handle errors, etc.
-    fs.createReadStream('/some/path').pipe(writestream);
-  }
- );
-
-// streaming from gridfs
-gfs.createReadStream({ _id: '50e03d29edfdc00d34000001' },
-  function (err, readstream) {
-    // Handle errors, etc.
-    readstream.pipe(fs.createWriteStream('/some/path'))
-              .on('error', function (err) {
-                console.log('An error occurred!', err);
-                throw err;
-              });
-  }
-);
-```
-
-The first thing to notice in the above code snippet is that the `createXStream` methods require callbacks in gridfs-locking stream whereas they don't in gridfs-stream. This is to allow for initializing
-the locks collection as necessary.
-
-One of the main differences from gridfs-stream is that you must create a read stream using a file's unique `_id` (not a filename). This is because filenames aren't required to be unique within a GridFS collection, and so robust locking based on filenames alone isn't possible. Likewise, if you want to append to, overwrite or delete an existing file, you also need to use an `_id`. The only case where omitting the `_id` is okay is when a new file is being written (because in this case a new `_id` is automatically generated.) As an aside, it was never good practice for most applications to use filenames as identifiers for GridFS, so this change is probably for the best. You can easily find a file's `_id` by filename (or any other metadata) by using the Grid's `.files` mongodb collection:
-
-```js
-gfs.files.findOne({"filename": "my_file.txt"}, {"_id":1}, function(e, d) {
-  if (e || !d) {
-    // error or file not found
-  } else {
-    fileID = d._id;
-  }
-});
-```
-
-The other main difference from gridfs-stream is that each instance of `Grid` is tied to a specific named GridFS collection when it is created, and this cannot be changed during the `Grid` object's lifetime. This change is necessary to associate the correct [gridfs-locks](https://www.npmjs.org/package/gridfs-locks) collection with each instance of `Grid`. In gridfs-locking-stream, the `Grid` constructor function can take an optional third parameter to specify a GridFS collection root name that is different from the default of `"fs"`:
-
-     gfs = Grid(db, mongo, "myroot");
-
-gridfs-stream allowed the GridFS collection to be changed on-the-fly using either the `{ root: "myroot" }` option when streams are created, or by using the `Grid.collection('myroot')` method to change the default collection. In gridfs-locking-stream the `.collection()` method has been eliminated and attempting to create a stream with a `{ root: "myroot" }` option that is different from the `Grid` object's initial root name will throw an error. If access to multiple GridFS collections is required, simply create multiple `Grid` object instances.
-
 ## Use
+
+**Note!** If you are already using `gridfs-stream` please read the "Differences from gridfs-stream" section near the bottom of this document for details on the small number of differences between `gridfs-stream` and `gridfs-locking-stream`.
 
 ```js
 var mongo = require('mongodb');
@@ -73,12 +22,12 @@ var Grid = require('gridfs-stream');
 
 // create or use an existing mongodb-native db instance.
 // for this example we'll just create one:
-var db = new mongo.Db('yourDatabaseName', new mongo.Server("127.0.0.1", 27017));
+var db = new mongo.Db('yourDatabase', new mongo.Server("127.0.0.1", 27017));
 
 // make sure the db instance is open before passing into `Grid`
 db.open(function (err) {
   if (err) return handleError(err);
-  var gfs = Grid(db, mongo);  // Use the default GridFS root collection name "fs"
+  var gfs = Grid(db, mongo);  // Use the default GridFS root collection "fs"
 
   // all set!
 })
@@ -105,18 +54,25 @@ gfs.createWriteStream([options], function (error, writestream) {
 Options may contain zero or more of the following options, for more information see [GridStore](http://mongodb.github.com/node-mongodb-native/api-generated/gridstore.html):
 ```js
 {
-    _id: '50e03d29edfdc00d34000001', // a MongoDb ObjectId, if omitted on writes a new file will be created
-    filename: 'my_file.txt', // a filename, not used as an identifier
-    mode: 'w', // default value: w+, possible options: w, w+, or r
+    _id: '50e03d29edfdc00d34000001', // a MongoDb ObjectId, a new file is
+                                     // created when writing with no _id
+    filename: 'my_file.txt',         // a filename, not used as an identifier
+    mode: 'w',                       // default value: w+
 
+                                     // possible options: w, w+, or r
     // any other options from the GridStore may be passed too, e.g.:
 
     chunkSize: 1024,
-    content_type: 'plain/text', // For content_type to work properly, set "mode"-option to "w" too!
-    root: 'my_collection',  // If specified, this must match the root name used to create the Grid object
+    content_type: 'plain/text', // For content_type to work properly
+                                // set "mode"-option to "w"
+    root: 'my_collection',      // If specified, this must match the root name
+                                // used to create the Grid object
     metadata: {
-        // ...
-    }
+                // whatever you want
+    },
+    aliases: [
+                // list of alternative filenames?
+    ]
 }
 ```
 
@@ -170,11 +126,11 @@ Any of the following may be added to the options object passed to `createReadStr
 
 ```js
 {
-  timeOut: 30,          // seconds to poll for an unavailable lock.
+  timeOut: 30,          // secs to poll for an unavailable lock.
                         // Default: Do not poll
-  pollingInterval: 5,   // seconds between successive attempts to acquire a lock.
+  pollingInterval: 5,   // secs between successive attempts to acquire a lock.
                         // Default: 5 sec
-  lockExpiration: 300,  // seconds until a lock expires in the database
+  lockExpiration: 300,  // secs until a lock expires in the database
                         // Default: Never expire
   metaData: null        // metadata to store with lock, useful for debugging.
                         // Default: null
@@ -206,7 +162,8 @@ lock_doc = stream.heldLock();
 }
 */
 
-// When a lock needs to be manually released, such as when a readstream is not read to the end.
+// When a lock needs to be manually released,
+// such as when a readstream is not read to the end.
 stream.releaseLock(function (e,d) {
   if (e) {
     // handle error
@@ -214,8 +171,9 @@ stream.releaseLock(function (e,d) {
   // d contains the new lock document
 });
 
-// When a lockExpiration option is used and more time is needed to finish using the stream before the lock expires.
-// Watching the 'expires-soon' event provides a way to request more time.
+// When a lockExpiration option is used and more time is needed to finish
+// using the stream before the lock expires. Watching the 'expires-soon'
+// event provides a way to request more time.
 stream.on('expires-soon', function () {
   stream.renewLock(function (e,d) {
     if (e) {
@@ -244,17 +202,72 @@ The lock documents for the files in a collection can also be accessed:
 
 ```js
   var gfs = Grid(conn.db);
-  gfs.locks.findOne({ files_id: '50e03d29edfdc00d34000001' }, function (err, doc) {
-    if (err) ...
-    console.log(doc);
+  gfs.locks.findOne({ files_id: '50e03d29edfdc00d34000001' },
+    function (err, doc) {
+      if (err) ...
+      console.log(doc);
   });
 ```
+
+## Differences from gridfs-stream
+
+If you use gridfs-stream but need [concurrency safe access to GridFS files](https://jira.mongodb.org/browse/NODE-157), you'll be pleased to learn that the API of gridfs-locking-stream is about 97% the same. Both libraries use gridfs-stream's underlying `ReadStream` and `WriteStream` classes, and gridfs-locking-stream passes the gridfs-stream unit tests, with a few changes needed to accommodate the small number of API differences.
+
+For example:
+
+```js
+var mongo = require('mongodb');
+var Grid = require('gridfs-stream');
+var gfs = Grid(db, mongo);
+
+// streaming to gridfs
+gfs.createWriteStream({ filename: 'my_file.txt' },  // A fileID will be
+                                                    // created automatically
+  function (err, writestream) {
+    // Handle errors, etc.
+    fs.createReadStream('/some/path').pipe(writestream);
+  }
+ );
+
+// streaming from gridfs
+gfs.createReadStream({ _id: '50e03d29edfdc00d34000001' },
+  function (err, readstream) {
+    // Handle errors, etc.
+    readstream.pipe(fs.createWriteStream('/some/path'))
+              .on('error', function (err) {
+                console.log('An error occurred!', err);
+                throw err;
+              });
+  }
+);
+```
+
+The first thing to notice in the above code snippet is that the `createXStream` methods require callbacks in gridfs-locking-stream whereas they don't in gridfs-stream. This is to allow for initializing the locks collection as necessary.
+
+One of the main differences from gridfs-stream is that you must create a read stream using a file's unique `_id` (not a filename). This is because filenames aren't required to be unique within a GridFS collection, and so robust locking based on filenames alone isn't possible. Likewise, if you want to append to, overwrite or delete an existing file, you also need to use an `_id`. The only case where omitting the `_id` is okay is when a new file is being written (because in this case a new `_id` is automatically generated.) As an aside, it was never good practice for most applications to use filenames as identifiers for GridFS, so this change is probably for the best. You can easily find a file's `_id` by filename (or any other metadata) by using the Grid's `.files` mongodb collection:
+
+```js
+gfs.files.findOne({"filename": "my_file.txt"}, {"_id":1}, function(e, d) {
+  if (e || !d) {
+    // error or file not found
+  } else {
+    fileID = d._id;
+  }
+});
+```
+
+The other main difference from gridfs-stream is that each instance of `Grid` is tied to a specific named GridFS collection when it is created, and this cannot be changed during the `Grid` object's lifetime. This change is necessary to associate the correct [gridfs-locks](https://www.npmjs.org/package/gridfs-locks) collection with each instance of `Grid`. In gridfs-locking-stream, the `Grid` constructor function can take an optional third parameter to specify a GridFS collection root name that is different from the default of `"fs"`:
+
+     gfs = Grid(db, mongo, "myroot");
+
+gridfs-stream allowed the GridFS collection to be changed on-the-fly using either the `{ root: "myroot" }` option when streams are created, or by using the `Grid.collection('myroot')` method to change the default collection. In gridfs-locking-stream the `.collection()` method has been eliminated and attempting to create a stream with a `{ root: "myroot" }` option that is different from the `Grid` object's initial root name will throw an error. If access to multiple GridFS collections is required, simply create multiple `Grid` object instances.
+
 
 ## using with mongoose
 
 ```js
 var mongoose = require('mongoose');
-var Grid = require('gridfs-stream');
+var Grid = require('gridfs-locking-stream');
 
 var conn = mongoose.createConnection(..);
 conn.once('open', function () {
