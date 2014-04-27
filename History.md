@@ -1,25 +1,28 @@
-0.1.3
-==================
+## v0.1.5
 
-* Updated documentation to improve formatting of code blocks on npmjs.org
+*     Bumped gridfs-locks required version to fix mongo 2.4.x issue
 
-0.1.2
-==================
+## v0.1.4
 
-* Updated documentation to reflect use of callbacks for createReadStream and createWriteStream
+*     Bumped gridfs-locks required version
 
-0.1.1
-==================
+## v0.1.3
 
-* Updated to use gridfs-locks v1.0.1
+*     Updated documentation to improve formatting of code blocks on npmjs.org
 
-0.1.0
-==================
+## v0.1.2
 
-* Updated to work with gridfs-locks v1.0.0
-* Adds events on streams to better handle lock expirations
+*     Updated documentation to reflect use of callbacks for createReadStream and createWriteStream
 
-0.0.1 - 0.0.3
-==================
+## v0.1.1
 
-* Initial commit of locking capabilities and various documentation fixes
+*     Updated to use gridfs-locks v1.0.1
+
+## v0.1.0
+
+*     Updated to work with gridfs-locks v1.0.0
+*     Adds events on streams to better handle lock expirations
+
+## Versions 0.0.1 - 0.0.3
+
+*     Initial commit of locking capabilities and various documentation fixes
