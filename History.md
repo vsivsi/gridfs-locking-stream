@@ -1,3 +1,7 @@
+## v0.1.6
+
+*     Bumped gridfs-locks required version to fix another mongo 2.4.x issue
+
 ## v0.1.5
 
 *     Bumped gridfs-locks required version to fix mongo 2.4.x issue
