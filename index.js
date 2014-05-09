@@ -91,9 +91,13 @@ Grid.prototype.createWriteStream = function (options, callback) {
           return lock.heldLock;
         }
         stream.on('error', function (err) {
-          lock.releaseLock();
+          if (lock.heldLock) {
+            lock.releaseLock();
+          }
         }).on('close', function (file) {
-          lock.releaseLock();
+          if (!lock.expired) {
+            lock.releaseLock();
+          }
         });
         lock.removeAllListeners();
         lock.on('expires-soon', function () { stream.emit('expires-soon'); });
@@ -164,9 +168,13 @@ Grid.prototype.createReadStream = function (options, callback) {
           return lock.heldLock;
         }
         stream.on('error', function (err) {
-          lock.releaseLock();
+          if (lock.heldLock) {
+            lock.releaseLock();
+          }
         }).on('end', function (file) {
-          lock.releaseLock();
+          if (!lock.expired) {
+            lock.releaseLock();
+          }
         });
         lock.removeAllListeners();
         lock.on('expires-soon', function () { stream.emit('expires-soon'); });
