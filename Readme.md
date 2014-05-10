@@ -18,7 +18,7 @@ npm test
 
 ```js
 var mongo = require('mongodb');
-var Grid = require('gridfs-stream');
+var Grid = require('gridfs-locking-stream');
 
 // create or use an existing mongodb-native db instance.
 // for this example we'll just create one:
@@ -101,6 +101,17 @@ gfs.createReadStream([options], function (error, readstream) {
 
 See the options of `createWriteStream` for more information.
 
+To get partial data with `createReadStream`, use `range` option. e.g.
+```js
+var readstream = gfs.createReadStream({
+  _id: '50e03d29edfdc00d34000001',
+  range: {
+    startPos: 100,
+    endPos: 500000
+  }
+});
+```
+
 ### remove
 
 Files can be removed by passing options (at least an `_id`) to the `remove()` method.
@@ -113,6 +124,19 @@ gfs.remove([options], function (err, result) {
   } else {
     console.log('failed');  // Due to failure to get a write lock
   }
+});
+```
+
+See the options of `createWriteStream` for more information.
+
+## check if file exists
+
+Check if a file exist by passing options (at least an `_id`) to the `exist()` method.
+
+```js
+gfs.exist(options, function (err, found) {
+  if (err) return handleError(err);
+  found ? console.log('File exists') : console.log('File does not exist');
 });
 ```
 

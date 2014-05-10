@@ -184,7 +184,6 @@ describe('test', function(){
         var pipe = readStream.pipe(ws);
       });
     });
-
     it('should pipe more data to an existing GridFS file', function(done){
       function pipe (id, cb) {
         if (!cb) cb = id, id = null;
@@ -199,7 +198,6 @@ describe('test', function(){
             readStream.pipe(ws);
           });
       }
-
       pipe(function (id) {
         pipe(id, function (id) {
           // read the file out. it should consist of two copies of original
@@ -210,12 +208,17 @@ describe('test', function(){
           });
         });
       })
-   });
-
+    });
     it('should be able to store a 12-letter file name', function(done) {
-      g.createWriteStream({ filename: '12345678.png' }, function(e, rs) {
-        assert.equal(rs.name,'12345678.png');
+      g.createWriteStream({ filename: '12345678.png' }, function(e, ws) {
+        assert.equal(ws.name,'12345678.png');
         done();
+      });
+    });
+    it('should expire and automatically close', function(done) {
+      this.timeout(5000)
+      g.createWriteStream({ filename: 'expire_test.txt', lockExpiration: 2, pollingInterval: 1 }, function(e, ws) {
+        ws.on('close', function () { done(); });
       });
     });
   });
@@ -358,9 +361,114 @@ describe('test', function(){
           rs.resume();
         }, 1000);
 
-        rs.on('data', function (data) {
+        rs.on('data', function (data) {});
+        rs.on('end', function () { done(); });
+      });
+    });
+
+    it('should expire and automatically close', function(done) {
+      this.timeout(5000)
+      g.createReadStream({ _id: id, lockExpiration: 2, pollingInterval: 1 }, function(e, rs) {
+        rs.pause();
+        rs.on('data', function (data) {});
+        rs.on('close', function () { done(); });
+      });
+    });
+
+    it('should provide piping to a writable stream with a range by id', function(done){
+      var file = fixturesDir + 'byid.png';
+      g.createReadStream({
+        _id: id,
+        range: {
+          startPos: 1000,
+          endPos: 10000
+        }
+      }, function (err, rs){
+        var writeStream = fs.createWriteStream(file);
+        assert(rs.id instanceof mongo.BSONPure.ObjectID);
+        assert(rs.id == String(id))
+
+        var opened = false;
+        var ended = false;
+
+        rs.on('open', function () {
+          opened = true;
+        });
+
+        rs.on('error', function (err) {
+          throw err;
+        });
+
+        rs.on('end', function () {
+          ended = true;
+        });
+
+        writeStream.on('close', function () {
+          //check they are identical
+          assert(opened);
+          assert(ended);
+
+          var buf1 = fs.readFileSync(imgReadPath);
+          var buf2 = fs.readFileSync(file);
+
+          assert(buf2.length === rs.options.range.endPos - rs.options.range.startPos + 1);
+
+          for (var i = 0, len = buf2.length; i < len; ++i) {
+            assert(buf1[i + rs.options.range.startPos] == buf2[i]);
+          }
+
+          fs.unlinkSync(file);
           done();
         });
+
+        rs.pipe(writeStream);
+      });
+    });
+  });
+
+  describe('exist', function () {
+    var g;
+
+    before(function(done){
+      g = Grid(db);
+      var readStream = fs.createReadStream(imgReadPath, { bufferSize: 1024 });
+      g.createWriteStream({ filename: 'logo.png'}, function(e, ws) {
+        id = ws.id;
+        ws.on('close', function () {
+          done();
+        });
+        var pipe = readStream.pipe(ws);
+      });
+    });
+
+    it('should allow checking for existence of files', function(done){
+      g.exist({ _id: id }, function (err, result) {
+        if (err) return done(err);
+        assert.ok(result);
+        done();
+      });
+    });
+    it('should allow checking for non existence of files', function(done){
+      g.exist({ _id: new mongo.BSONPure.ObjectID() }, function (err, result) {
+        if (err) return done(err);
+        assert.ok(!result);
+        done();
+      });
+    });
+  });
+
+  describe('remove', function(){
+    var g;
+
+    before(function(done){
+      g = Grid(db);
+      var readStream = fs.createReadStream(imgReadPath, { bufferSize: 1024 });
+      g.createWriteStream({ filename: 'logo.png'}, function(e, ws) {
+        id = ws.id;
+        ws.on('close', function () {
+          done();
+        });
+        var pipe = readStream.pipe(ws);
       });
     });
 
@@ -374,7 +482,6 @@ describe('test', function(){
         })
       });
     })
-
   });
 
   after(function (done) {

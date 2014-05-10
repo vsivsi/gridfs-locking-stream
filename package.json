@@ -3,7 +3,7 @@
   "name": "gridfs-locking-stream",
   "description": "Writable/Readable Nodejs compatible GridFS streams with locking for safe concurrent access",
   "main": "index.js",
-  "version": "0.1.7",
+  "version": "0.2.0",
   "keywords": [
     "mongodb",
     "mongoose",
@@ -20,12 +20,12 @@
     "test": "make test"
   },
   "dependencies": {
-    "gridfs-stream": ">= 0.4.1",
+    "gridfs-stream": ">= 0.5.0",
     "gridfs-locks": ">= 1.2.0"
   },
   "devDependencies": {
     "mocha": "*",
-    "mongodb": ">= 1.4.2"
+    "mongodb": ">= 1.4.3"
   },
   "optionalDependencies": {},
   "engines": {

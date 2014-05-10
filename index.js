@@ -171,14 +171,21 @@ Grid.prototype.createReadStream = function (options, callback) {
           if (lock.heldLock) {
             lock.releaseLock();
           }
-        }).on('end', function (file) {
+        }).on('close', function (file) {
           if (!lock.expired) {
+            lock.releaseLock();
+          }
+        }).on('end', function (file) {
+          if (lock.heldLock) {
             lock.releaseLock();
           }
         });
         lock.removeAllListeners();
         lock.on('expires-soon', function () { stream.emit('expires-soon'); });
-        lock.on('expired', function () { stream.destroy(); stream.emit('expired'); });
+        lock.on('expired', function () {
+          stream.destroy();
+          stream.emit('expired');
+        });
         callback(null, stream, l);
     }).once('timed-out', function () {
         callback(null, null);
@@ -285,6 +292,21 @@ Grid.prototype.remove = function (options, callback) {
   } else {
     lockAndRemove();
   }
+}
+
+/**
+ * Checks if a file exists by passing an _id
+ *
+ * @param {Object} options
+ * @param {Function} callback
+ */
+
+Grid.prototype.exist = function (options, callback) {
+    var _id;
+    if (options._id) {
+        _id = this.tryParseObjectId(options._id) || options._id;
+    }
+    return this.mongo.GridStore.exist(this.db, _id, callback);
 }
 
 /**

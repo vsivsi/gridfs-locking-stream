@@ -1,3 +1,9 @@
+## v0.2.0
+
+*     Upgraded to gridfs-streams 0.5, added range read support, support for file existance queries, associated tests
+*     Fixed issues with streams always automatically closing properly when locks expire, added corresponding tests
+*     Documentation updates / improvements
+
 ## v0.1.7
 
 *     Bumped gridfs-locks to 1.2.0 to provide improved performance for MongoDB 2.6
