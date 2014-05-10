@@ -1,3 +1,7 @@
+## v0.2.1
+
+*     Bumped gridfs-locks to v1.2.1
+
 ## v0.2.0
 
 *     Upgraded to gridfs-streams 0.5, added range read support, support for file existance queries, associated tests
