@@ -1,3 +1,7 @@
+## v0.2.2
+
+*     Bumped gridfs-streams v0.5.1
+
 ## v0.2.1
 
 *     Bumped gridfs-locks to v1.2.1
