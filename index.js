@@ -150,6 +150,15 @@ Grid.prototype.createReadStream = function (options, callback) {
     lock.obtainReadLock().on('locked',
       function (l) {
         var stream = new GridReadStream(self, options);
+        var tryReleaseLock = function () {
+          var releasePending = false;
+          return function () {
+            if (lock.heldLock && !releasePending) {
+              releasePending = true;
+              lock.releaseLock();
+            }
+          }
+        };
         stream.releaseLock = function (callback) {
           lock.releaseLock();
           if (callback) {
@@ -167,19 +176,9 @@ Grid.prototype.createReadStream = function (options, callback) {
         stream.heldLock = function () {
           return lock.heldLock;
         }
-        stream.on('error', function (err) {
-          if (lock.heldLock) {
-            lock.releaseLock();
-          }
-        }).on('close', function (file) {
-          if (lock.heldLock) {
-            lock.releaseLock();
-          }
-        }).on('end', function (file) {
-          if (lock.heldLock) {
-            lock.releaseLock();
-          }
-        });
+        stream.on('error', tryReleaseLock)
+              .on('close', tryReleaseLock)
+              .on('end', tryReleaseLock);
         lock.removeAllListeners();
         lock.on('expires-soon', function () { stream.emit('expires-soon'); });
         lock.on('expired', function () {
