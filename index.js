@@ -156,6 +156,8 @@ Grid.prototype.createReadStream = function (options, callback) {
             if (lock.heldLock && !releasePending) {
               releasePending = true;
               lock.releaseLock();
+            } else {
+              console.warn('Warning: gridfs-locking-stream received duplicate end/close events!');
             }
           }
         };
