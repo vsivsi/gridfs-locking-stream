@@ -1,3 +1,7 @@
+## v0.2.3
+
+*     Don't release unheld locks on `close` events. Thanks to @ceari for reporting issue.
+
 ## v0.2.2
 
 *     Bumped gridfs-streams v0.5.1

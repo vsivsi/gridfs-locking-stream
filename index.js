@@ -95,7 +95,7 @@ Grid.prototype.createWriteStream = function (options, callback) {
             lock.releaseLock();
           }
         }).on('close', function (file) {
-          if (!lock.expired) {
+          if (lock.heldLock) {
             lock.releaseLock();
           }
         });
@@ -172,7 +172,7 @@ Grid.prototype.createReadStream = function (options, callback) {
             lock.releaseLock();
           }
         }).on('close', function (file) {
-          if (!lock.expired) {
+          if (lock.heldLock) {
             lock.releaseLock();
           }
         }).on('end', function (file) {
