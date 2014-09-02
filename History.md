@@ -1,6 +1,6 @@
 ## v0.2.3
 
-*     Don't release unheld locks on `close` events. Thanks to @ceari for reporting issue.
+*     Don't attempt release of unheld locks on multiple `close` or 'end' events. Thanks to @ceari for reporting issue.
 
 ## v0.2.2
 
