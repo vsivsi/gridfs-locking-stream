@@ -160,7 +160,7 @@ Grid.prototype.createReadStream = function (options, callback) {
               console.warn('Warning: gridfs-locking-stream received duplicate end/close events for file _id:', lock.fileId);
             }
           }
-        };
+        }();
         stream.releaseLock = function (callback) {
           lock.releaseLock();
           if (callback) {

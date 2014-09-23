@@ -1,3 +1,7 @@
+## v0.2.4
+
+*     Fixed bug preventing proper unlocking of read streams introduced in last version
+
 ## v0.2.3
 
 *     Don't attempt release of unheld locks on multiple `close` or 'end' events. Thanks to @ceari for reporting issue.
