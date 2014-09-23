@@ -21,11 +21,11 @@
   },
   "dependencies": {
     "gridfs-stream": ">= 0.5.1",
-    "gridfs-locks": ">= 1.2.1"
+    "gridfs-locks": ">= 1.2.2"
   },
   "devDependencies": {
     "mocha": "*",
-    "mongodb": ">= 1.4.9"
+    "mongodb": ">= 1.4.12"
   },
   "optionalDependencies": {},
   "engines": {

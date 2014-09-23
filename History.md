@@ -1,6 +1,8 @@
 ## v0.2.3
 
 *     Don't attempt release of unheld locks on multiple `close` or 'end' events. Thanks to @ceari for reporting issue.
+*     Updated to gridfs-locks v1.2.2
+*     Updated mongodb to 1.4.12
 
 ## v0.2.2
 
