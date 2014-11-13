@@ -1,3 +1,8 @@
+
+## v0.2.5
+
+*     Updated dependencies to require newer version of gridfs-stream that fixes important bugs
+
 ## v0.2.4
 
 *     Fixed bug preventing proper unlocking of read streams introduced in last version
