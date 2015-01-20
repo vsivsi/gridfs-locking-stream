@@ -1,10 +1,10 @@
 (The MIT License)
 
 gridfs-locking-stream concurrent API extensions and documentation update
-Copyright (c) 2014 Vaughn Iverson
+Copyright (c) 2014-2015 Vaughn Iverson
 
 Original gridfs-stream code and documentation:
-Copyright (c) 2012 [Aaron Heckmann](aaron.heckmann+github@gmail.com)
+Copyright (c) 2012-2014 [Aaron Heckmann](aaron.heckmann+github@gmail.com)
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the

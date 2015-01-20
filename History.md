@@ -1,3 +1,6 @@
+## v.NEXT
+
+* Removed duplicate end/close event warnings, and replaced them with lock expiration warnings
 
 ## v0.2.5
 

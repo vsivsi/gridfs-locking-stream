@@ -1,4 +1,8 @@
-// gridfs-locking-stream
+/***************************************************************************
+###  Copyright (C) 2014-2015 by Vaughn Iverson
+###  gridfs-locking-stream is free software released under the MIT/X11 license.
+###  See included LICENSE file for details.
+***************************************************************************/
 
 /**
  * Module dependencies.
@@ -97,6 +101,8 @@ Grid.prototype.createWriteStream = function (options, callback) {
         }).on('close', function (file) {
           if (lock.heldLock) {
             lock.releaseLock();
+          } else {
+            console.warn('Warning: gridfs-locking-stream Write Lock Expired for file', lock.fileId);
           }
         });
         lock.removeAllListeners();
@@ -156,8 +162,8 @@ Grid.prototype.createReadStream = function (options, callback) {
             if (lock.heldLock && !releasePending) {
               releasePending = true;
               lock.releaseLock();
-            } else {
-              console.warn('Warning: gridfs-locking-stream received duplicate end/close events for file _id:', lock.fileId);
+            } else if (!lock.heldLock) {
+              console.warn('Warning: gridfs-locking-stream Read Lock Expired for file', lock.fileId);
             }
           }
         }();
