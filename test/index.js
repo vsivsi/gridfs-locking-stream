@@ -92,22 +92,19 @@ describe('test', function(){
       assert(ws.id)
     })
     it('id should be an ObjectId', function(){
-      assert(ws.id instanceof mongo.BSONPure.ObjectID);
+      assert(ws.id instanceof mongo.ObjectID);
     });
     it('should have a name', function(){
       assert(ws.name == 'logo.png')
     })
     describe('options', function(){
-      it('should have four keys', function(){
+      it('should have three keys', function(){
         // console.log("Keys: " + Object.keys(ws.options));
-        assert(Object.keys(ws.options).length === 4);
-      });
-      it('limit should be Infinity', function(){
-        assert(ws.options.limit === Infinity)
+        assert(Object.keys(ws.options).length === 3);
       });
     })
-    it('mode should default to w+', function(){
-      assert(ws.mode == 'w+');
+    it('mode should default to w', function(){
+      assert(ws.mode == 'w');
     })
     it('should have an empty q', function(){
       assert(Array.isArray(ws._q));
@@ -184,6 +181,7 @@ describe('test', function(){
         var pipe = readStream.pipe(ws);
       });
     });
+    /* w+ is disable as in mongodb drive 2.0.15 because of possible dat corruption
     it('should pipe more data to an existing GridFS file', function(done){
       function pipe (id, cb) {
         if (!cb) cb = id, id = null;
@@ -209,6 +207,7 @@ describe('test', function(){
         });
       })
     });
+    */
     it('should be able to store a 12-letter file name', function(done) {
       g.createWriteStream({ filename: '12345678.png' }, function(e, ws) {
         assert.equal(ws.name,'12345678.png');
@@ -313,7 +312,7 @@ describe('test', function(){
         _id: id
       }, function(e, rs) {
         var writeStream = fs.createWriteStream(file);
-        assert(rs.id instanceof mongo.BSONPure.ObjectID);
+        assert(rs.id instanceof mongo.ObjectID);
         assert(rs.id == String(id))
 
         var opened = false;
@@ -385,7 +384,7 @@ describe('test', function(){
         }
       }, function (err, rs){
         var writeStream = fs.createWriteStream(file);
-        assert(rs.id instanceof mongo.BSONPure.ObjectID);
+        assert(rs.id instanceof mongo.ObjectID);
         assert(rs.id == String(id))
 
         var opened = false;
@@ -449,7 +448,7 @@ describe('test', function(){
       });
     });
     it('should allow checking for non existence of files', function(done){
-      g.exist({ _id: new mongo.BSONPure.ObjectID() }, function (err, result) {
+      g.exist({ _id: new mongo.ObjectID() }, function (err, result) {
         if (err) return done(err);
         assert.ok(!result);
         done();

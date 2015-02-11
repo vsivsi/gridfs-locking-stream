@@ -25,7 +25,7 @@
   },
   "devDependencies": {
     "mocha": "*",
-    "mongodb": ">= 1.4.19"
+    "mongodb": ">= 2.0.15"
   },
   "optionalDependencies": {},
   "engines": {
