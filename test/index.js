@@ -106,10 +106,6 @@ describe('test', function(){
     it('mode should default to w', function(){
       assert(ws.mode == 'w');
     })
-    it('should have an empty q', function(){
-      assert(Array.isArray(ws._q));
-      assert(ws._q.length === 0);
-    })
     describe('store', function(){
       it('should be an instance of mongo.GridStore', function(){
         assert(ws._store instanceof mongo.GridStore)
