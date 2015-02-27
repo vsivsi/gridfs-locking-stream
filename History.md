@@ -1,3 +1,8 @@
+## v1.0.0
+
+* Updated to use gridfs-stream v1.1 and node.js mongodb native driver v2.x. These changes implement node.js "new style" streams as introdiced in node.js v0.10
+* Updated to gridfs-locks 1.3 to provide support for the mongodb native driver v2.x
+
 ## v0.2.6
 
 * Removed duplicate end/close event warnings, and replaced them with lock expiration warnings
