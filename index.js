@@ -121,7 +121,7 @@ Grid.prototype.createWriteStream = function (options, callback) {
 
   if (!options._id) {
     // New file
-    options._id = new self.mongo.BSONPure.ObjectID
+    options._id = new self.mongo.ObjectID
   }
 
   if (options.root && self.root !== options.root) {
@@ -327,7 +327,7 @@ Grid.prototype.exist = function (options, callback) {
 Grid.prototype.tryParseObjectId = function tryParseObjectId (string) {
   var self = this;
   try {
-    return new self.mongo.BSONPure.ObjectID(string);
+    return new self.mongo.ObjectID(string);
   } catch (_) {
     return false;
   }
