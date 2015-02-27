@@ -4,6 +4,10 @@ Easily stream files to and from MongoDB [GridFS](http://www.mongodb.org/display/
 
 Because [GridFS is not inherently safe for concurrent accesses to a file](https://jira.mongodb.org/browse/NODE-157), this package adds robust concurrency support to the excellent [gridfs-stream](https://www.npmjs.org/package/gridfs-stream) package by [@aaron](https://www.npmjs.org/~aaron). It is basically gridfs-stream + [gridfs-locks](https://www.npmjs.org/package/gridfs-locks), with a few minor "concurrency friendly" revisions to the gridfs-stream API.
 
+## What's new in version 1.0?
+
+This major revision of gridfs-locking-stream supports [node.js v0.10 "new style" streams](http://nodejs.org/api/stream.html#stream_compatibility_with_older_node_versions). This is accomplished by using the newly updated v1.x version of the [gridfs-stream](https://github.com/aheckmann/gridfs-stream) library, combined with use of the new v2.x native mongodb driver library. One major change in all of this is that the new mongodb v2.x driver restricts write streams so they can no longer append to existing files. This is a bit disappointing because the purpose of this library was to ensure that such operations could be performed safely. However, this library is still useful in handling one remaining case... Ensuring that a file currently being read or written cannot be deleted until the present operation is complete. Without locking this case still has the potential to lead to server crashes or data corruption for readers.
+
 ## Install
 
 ```
