@@ -1,6 +1,7 @@
-## v.NEXT
+## v0.2.6
 
 * Removed duplicate end/close event warnings, and replaced them with lock expiration warnings
+* Updated unit test dependencies to respect semantic versions
 
 ## v0.2.5
 
