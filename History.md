@@ -1,3 +1,8 @@
+## v1.0.1
+
+* Updated to use gridfs-locks v1.3.1 and node.js mongodb native driver v2.0.19
+
+
 ## v1.0.0
 
 * Updated to use gridfs-stream v1.1 and node.js mongodb native driver v2.x. These changes implement node.js "new style" streams as introdiced in node.js v0.10
