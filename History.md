@@ -1,3 +1,7 @@
+## v1.0.2
+
+* Updated to use gridfs-locks v1.3.2 and node.js mongodb native driver v2.0.21
+
 ## v1.0.1
 
 * Updated to use gridfs-locks v1.3.1 and node.js mongodb native driver v2.0.19
