@@ -1,3 +1,7 @@
+## v1.0.3
+
+* Fixed bug that squelched future lock events when a callback function was provided to `stream.renewLock()`
+
 ## v1.0.2
 
 * Updated to use gridfs-locks v1.3.2 and node.js mongodb native driver v2.0.21

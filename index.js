@@ -87,7 +87,7 @@ Grid.prototype.createWriteStream = function (options, callback) {
         stream.renewLock = function (callback) {
           lock.renewLock();
           if (callback) {
-            lock.once('renewed', function (l) { lock.removeAllListeners(); callback(null, l); });
+            lock.once('renewed', function (l) { callback(null, l); });
             lock.once('error', function (e) { lock.removeAllListeners(); callback(e); });
           }
         }
@@ -177,7 +177,7 @@ Grid.prototype.createReadStream = function (options, callback) {
         stream.renewLock = function (callback) {
           lock.renewLock();
           if (callback) {
-            lock.once('renewed', function (l) { lock.removeAllListeners(); callback(null, l); });
+            lock.once('renewed', function (l) { callback(null, l); });
             lock.once('error', function (e) { lock.removeAllListeners(); callback(e); });
           }
         }
