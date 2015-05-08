@@ -1,3 +1,7 @@
+## v1.0.4
+
+* Bumped version of gridfs-locks package
+
 ## v1.0.3
 
 * Fixed bug that squelched future lock events when a callback function was provided to `stream.renewLock()`
