@@ -1,3 +1,9 @@
+### 1.0.5
+
+- Added Travis CI automated Testing
+- Updated npm dependencies
+- Fixed license ID in package file
+
 ## v1.0.4
 
 * Bumped version of gridfs-locks package

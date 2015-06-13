@@ -1,5 +1,7 @@
 # gridfs-locking-stream
 
+[![Build Status](https://travis-ci.org/vsivsi/gridfs-locking-stream.svg)](https://travis-ci.org/vsivsi/gridfs-locking-stream)
+
 Easily stream files to and from MongoDB [GridFS](http://www.mongodb.org/display/DOCS/GridFS) with concurrency safe read/write access.
 
 Because [GridFS is not inherently safe for concurrent accesses to a file](https://jira.mongodb.org/browse/NODE-157), this package adds robust concurrency support to the excellent [gridfs-stream](https://www.npmjs.org/package/gridfs-stream) package by [@aaron](https://www.npmjs.org/~aaron). It is basically gridfs-stream + [gridfs-locks](https://www.npmjs.org/package/gridfs-locks), with a few minor "concurrency friendly" revisions to the gridfs-stream API.
