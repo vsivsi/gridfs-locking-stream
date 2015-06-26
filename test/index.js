@@ -468,8 +468,9 @@ describe('test', function(){
     });
 
     it('should allow removing files', function(done){
-      g.remove({ _id: id }, function (err) {
+      g.remove({ _id: id }, function (err, res) {
         if (err) return done(err);
+        assert.ok(res);
         g.files.findOne({ _id: id }, function (err, doc) {
           if (err) return done(err);
           assert.ok(!doc);
