@@ -1,8 +1,14 @@
+### 1.1.0
+
+* Added stream.lockReleased() call to read and write stream objects
+* Fixed JSLint issues
+* Updated npm dependencies
+
 ### 1.0.5
 
-- Added Travis CI automated Testing
-- Updated npm dependencies
-- Fixed license ID in package file
+* Added Travis CI automated Testing
+* Updated npm dependencies
+* Fixed license ID in package file
 
 ## v1.0.4
 

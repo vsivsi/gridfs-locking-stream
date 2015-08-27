@@ -1,22 +1,22 @@
 
 // fixture/logo.png
-var assert = require('assert')
-  , Stream = require('stream')
-  , fs = require('fs')
-  , mongo = require('mongodb')
-  , Grid = require('../')
-  , fixturesDir = __dirname + '/fixtures/'
-  , imgReadPath = __dirname + '/fixtures/mongo.png'
-  , txtReadPath = __dirname + '/fixtures/text.txt'
-  , server
-  , db
+var assert = require('assert'),
+  Stream = require('stream'),
+  fs = require('fs'),
+  mongo = require('mongodb'),
+  Grid = require('../'),
+  fixturesDir = __dirname + '/fixtures/',
+  imgReadPath = __dirname + '/fixtures/mongo.png',
+  txtReadPath = __dirname + '/fixtures/text.txt',
+  server,
+  db;
 
 describe('test', function(){
   var id;
   before(function (done) {
     server = new mongo.Server('localhost', 27017);
     db = new mongo.Db('gridstream_test', server, {w:1});
-    db.open(done)
+    db.open(done);
   });
 
   describe('Grid', function () {
@@ -35,30 +35,30 @@ describe('test', function(){
     });
     it('should require mongo argument', function(){
       assert.throws(function () {
-        new Grid(3)
+        new Grid(3);
       }, /missing mongo argument/);
-    })
+    });
     it('should require db argument', function(){
       assert.throws(function () {
-        new Grid(null, 3)
+        new Grid(null, 3);
       }, /missing db argument/);
-    })
+    });
     it('should default .root to the value of GridStore.DEFAULT_ROOT_COLLECTION', function(){
       var x = Grid(db, mongo);
       assert.equal(x.root, mongo.GridStore.DEFAULT_ROOT_COLLECTION);
-    })
+    });
     describe('files', function(){
       it('returns a collection', function(){
         var g = new Grid(db, mongo);
         assert(g.files instanceof mongo.Collection);
-      })
-    })
+      });
+    });
     describe('locks', function(){
       it('returns a collection', function(){
         var g = new Grid(db, mongo);
         assert(g.locks instanceof mongo.Collection);
-      })
-    })
+      });
+    });
   });
 
   describe('createWriteStream', function(){
@@ -66,72 +66,75 @@ describe('test', function(){
       var x = Grid(1, mongo);
       assert('function' == typeof x.createWriteStream);
     });
-  })
+  });
 
   describe('GridWriteStream', function(){
-    var g
-      , ws
+    var g;
+    var ws;
 
     before(function(done){
       Grid.mongo = mongo;
       g = Grid(db);
       ws = null;
-      g.createWriteStream({ filename: 'logo.png' }, function(e, stream) { ws = stream; done(); });
+      g.createWriteStream({ filename: 'logo.png' }, function(e, stream) {
+        ws = stream;
+        done();
+      });
     });
 
     it('should be an instance of Stream', function(){
       assert(ws instanceof Stream);
-    })
+    });
     it('should should be writable', function(){
       assert(ws.writable);
     });
     it('should store the grid', function(){
-      assert(ws._grid == g)
+      assert(ws._grid == g);
     });
     it('should have an id', function(){
-      assert(ws.id)
-    })
+      assert(ws.id);
+    });
     it('id should be an ObjectId', function(){
       assert(ws.id instanceof mongo.ObjectID);
     });
     it('should have a name', function(){
-      assert(ws.name == 'logo.png')
-    })
+      assert(ws.name == 'logo.png');
+    });
     describe('options', function(){
       it('should have three keys', function(){
         // console.log("Keys: " + Object.keys(ws.options));
         assert(Object.keys(ws.options).length === 3);
       });
-    })
+    });
     it('mode should default to w', function(){
       assert(ws.mode == 'w');
-    })
+    });
     describe('store', function(){
       it('should be an instance of mongo.GridStore', function(){
-        assert(ws._store instanceof mongo.GridStore)
-      })
-    })
+        assert(ws._store instanceof mongo.GridStore);
+      });
+    });
     describe('#methods', function(){
       describe('write', function(){
         it('should be a function', function(){
-          assert('function' == typeof ws.write)
-        })
-      })
+          assert('function' == typeof ws.write);
+        });
+      });
       describe('end', function(){
         it('should be a function', function(){
-          assert('function' == typeof ws.end)
-        })
-      })
+          assert('function' == typeof ws.end);
+        });
+      });
       describe('destroy', function(){
         it('should be a function', function(){
-          assert('function' == typeof ws.destroy)
-        })
-      })
+          assert('function' == typeof ws.destroy);
+        });
+      });
       describe('destroySoon', function(){
         it('should be a function', function(){
-          assert('function' == typeof ws.destroySoon)
-        })
-      })
+          assert('function' == typeof ws.destroySoon);
+        });
+      });
     });
     it('should provide piping from a readableStream into GridFS', function(done){
       var readStream = fs.createReadStream(imgReadPath, { bufferSize: 1024 });
@@ -147,8 +150,11 @@ describe('test', function(){
 
         ws.on('close', function () {
           assert(progress > 0);
-          done();
+          ws.lockReleased(function () {
+            done();
+          });
         });
+
         var pipe = readStream.pipe(ws);
       });
     });
@@ -169,11 +175,14 @@ describe('test', function(){
         });
 
         ws.on('close', function (file) {
-          assert(file.filename === 'closeEvent.png')
-          assert(file.contentType === 'image/png')
+          assert(file.filename === 'closeEvent.png');
+          assert(file.contentType === 'image/png');
           assert(progress > 0);
-          done();
+          ws.lockReleased(function () {
+            done();
+          });
         });
+
         var pipe = readStream.pipe(ws);
       });
     });
@@ -211,7 +220,7 @@ describe('test', function(){
       });
     });
     it('should expire and automatically close', function(done) {
-      this.timeout(5000)
+      this.timeout(5000);
       g.createWriteStream({ filename: 'expire_test.txt', lockExpiration: 2, pollingInterval: 1 }, function(e, ws) {
         ws.on('close', function () { done(); });
       });
@@ -226,8 +235,8 @@ describe('test', function(){
   });
 
   describe('GridReadStream', function(){
-    var g
-      , rs
+    var g;
+    var rs;
 
     before(function(done){
       g = Grid(db);
@@ -251,10 +260,10 @@ describe('test', function(){
     });
     it('should have a name', function(){
       assert(rs.name == 'logo.png');
-    })
+    });
     it('should have an id', function(){
       assert.equal(rs.id, id);
-    })
+    });
     describe('options', function(){
       it('should have two keys', function(done) {
         g.createReadStream({ _id: id }, function(e, rs) {
@@ -263,44 +272,44 @@ describe('test', function(){
           done();
         });
       });
-    })
+    });
     it('mode should default to r', function(){
       assert(rs.mode == 'r');
       assert(rs._store.mode == 'r');
-    })
+    });
 
     describe('store', function(){
       it('should be an instance of mongo.GridStore', function(){
-        assert(rs._store instanceof mongo.GridStore)
-      })
-    })
+        assert(rs._store instanceof mongo.GridStore);
+      });
+    });
     describe('#methods', function(){
       describe('setEncoding', function(){
         it('should be a function', function(){
-          assert('function' == typeof rs.setEncoding)
+          assert('function' == typeof rs.setEncoding);
           // TODO test actual encodings
-        })
-      })
+        });
+      });
       describe('pause', function(){
         it('should be a function', function(){
-          assert('function' == typeof rs.pause)
-        })
-      })
+          assert('function' == typeof rs.pause);
+        });
+      });
       describe('destroy', function(){
         it('should be a function', function(){
-          assert('function' == typeof rs.destroy)
-        })
-      })
+          assert('function' == typeof rs.destroy);
+        });
+      });
       describe('resume', function(){
         it('should be a function', function(){
-          assert('function' == typeof rs.resume)
-        })
-      })
+          assert('function' == typeof rs.resume);
+        });
+      });
       describe('pipe', function(){
         it('should be a function', function(){
-          assert('function' == typeof rs.pipe)
-        })
-      })
+          assert('function' == typeof rs.pipe);
+        });
+      });
     });
     it('should provide piping to a writable stream by id', function(done){
       var file = fixturesDir + 'byid.png';
@@ -309,7 +318,7 @@ describe('test', function(){
       }, function(e, rs) {
         var writeStream = fs.createWriteStream(file);
         assert(rs.id instanceof mongo.ObjectID);
-        assert(rs.id == String(id))
+        assert(rs.id == String(id));
 
         var opened = false;
         var ended = false;
@@ -341,7 +350,9 @@ describe('test', function(){
           }
 
           fs.unlinkSync(file);
-          done();
+          rs.lockReleased(function () {
+            done();
+          });
         });
 
         rs.pipe(writeStream);
@@ -362,11 +373,15 @@ describe('test', function(){
     });
 
     it('should expire and automatically close', function(done) {
-      this.timeout(5000)
+      this.timeout(5000);
       g.createReadStream({ _id: id, lockExpiration: 2, pollingInterval: 1 }, function(e, rs) {
         rs.pause();
         rs.on('data', function (data) {});
-        rs.on('close', function () { done(); });
+        rs.on('close', function () {
+          rs.lockReleased(function () {
+            done();
+          });
+        });
       });
     });
 
@@ -381,7 +396,7 @@ describe('test', function(){
       }, function (err, rs){
         var writeStream = fs.createWriteStream(file);
         assert(rs.id instanceof mongo.ObjectID);
-        assert(rs.id == String(id))
+        assert(rs.id == String(id));
 
         var opened = false;
         var ended = false;
@@ -413,7 +428,9 @@ describe('test', function(){
           }
 
           fs.unlinkSync(file);
-          done();
+          rs.lockReleased(function () {
+            done();
+          });
         });
 
         rs.pipe(writeStream);
@@ -475,9 +492,9 @@ describe('test', function(){
           if (err) return done(err);
           assert.ok(!doc);
           done();
-        })
+        });
       });
-    })
+    });
   });
 
   after(function (done) {

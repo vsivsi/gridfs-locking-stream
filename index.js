@@ -28,7 +28,7 @@ function Grid (db, mongo, root) {
   }
   var self = this;
 
-  mongo || (mongo = Grid.mongo ? Grid.mongo : undefined);
+  if (!mongo) mongo = Grid.mongo ? Grid.mongo : undefined;
 
   if (!mongo) throw new Error('missing mongo argument\nnew Grid(db, mongo)');
   if (!db) throw new Error('missing db argument\nnew Grid(db, mongo)');
@@ -60,7 +60,7 @@ Grid.prototype.createLockCollection = function (options, callback) {
     lockColl.removeAllListeners();
     return callback(err);
   });
-}
+};
 
 /**
  * Creates a writable stream.
@@ -83,17 +83,24 @@ Grid.prototype.createWriteStream = function (options, callback) {
             lock.once('released', function (l) { lock.removeAllListeners(); callback(null, l); });
             lock.once('error', function (e) { lock.removeAllListeners(); callback(e); });
           }
-        }
+        };
         stream.renewLock = function (callback) {
           lock.renewLock();
           if (callback) {
             lock.once('renewed', function (l) { callback(null, l); });
             lock.once('error', function (e) { lock.removeAllListeners(); callback(e); });
           }
-        }
+        };
         stream.heldLock = function () {
           return lock.heldLock;
-        }
+        };
+        stream.lockReleased = function (callback) {
+          if (lock.heldLock) {
+            lock.once('released', function (ld) { callback(null, ld); });
+          } else {
+            setImmediate(function () { callback(null, null); });
+          }
+        };
         stream.on('error', function (err) {
           if (lock.heldLock) {
             lock.releaseLock();
@@ -121,7 +128,7 @@ Grid.prototype.createWriteStream = function (options, callback) {
 
   if (!options._id) {
     // New file
-    options._id = new self.mongo.ObjectID
+    options._id = new self.mongo.ObjectID();
   }
 
   if (options.root && self.root !== options.root) {
@@ -138,7 +145,7 @@ Grid.prototype.createWriteStream = function (options, callback) {
   } else {
     lockAndWrite();
   }
-}
+};
 
 /**
  * Creates a readable stream. Pass at least a filename or _id option
@@ -165,7 +172,7 @@ Grid.prototype.createReadStream = function (options, callback) {
             } else if (!lock.heldLock) {
               console.warn('Warning: gridfs-locking-stream Read Lock Expired for file', lock.fileId);
             }
-          }
+          };
         }();
         stream.releaseLock = function (callback) {
           lock.releaseLock();
@@ -173,17 +180,24 @@ Grid.prototype.createReadStream = function (options, callback) {
             lock.once('released', function (l) { lock.removeAllListeners(); callback(null, l); });
             lock.once('error', function (e) { lock.removeAllListeners(); callback(e); });
           }
-        }
+        };
         stream.renewLock = function (callback) {
           lock.renewLock();
           if (callback) {
             lock.once('renewed', function (l) { callback(null, l); });
             lock.once('error', function (e) { lock.removeAllListeners(); callback(e); });
           }
-        }
+        };
         stream.heldLock = function () {
           return lock.heldLock;
-        }
+        };
+        stream.lockReleased = function (callback) {
+          if (lock.heldLock) {
+            lock.once('released', function (ld) { callback(null, ld); });
+          } else {
+            setImmediate(function () { callback(null, null); });
+          }
+        };
         stream.on('error', tryReleaseLock)
               .on('close', tryReleaseLock)
               .on('end', tryReleaseLock);
@@ -221,7 +235,7 @@ Grid.prototype.createReadStream = function (options, callback) {
   } else {
     lockAndRead();
   }
-}
+};
 
 /**
  * The collection used to store file data in mongodb.
@@ -231,8 +245,9 @@ Grid.prototype.createReadStream = function (options, callback) {
 Object.defineProperty(Grid.prototype, 'files', {
   get: function () {
     var self = this;
-    if (self._col) return self._col;
-    return self._col = self.db.collection(self.root + ".files");
+    if (!self._col)
+      self._col = self.db.collection(self.root + ".files");
+    return self._col;
   }
 });
 
@@ -274,10 +289,11 @@ Grid.prototype.remove = function (options, callback) {
     lock.obtainWriteLock().once('locked',
       function () {
         self.mongo.GridStore.unlink(self.db, _id, options, function (err) {
-          if (err) { lock.releaseLock(); return callback(err); }
-          lock.removeLock().on('removed', function () { callback(null, true); });
-      });
-    }).once('timed-out', function () {
+          if (err) { lock.releaseLock().once('released', function () { return callback(err); }); }
+          lock.removeLock().once('removed', function () { callback(null, true); });
+        });
+      }
+    ).once('timed-out', function () {
         callback(null, null);
       }
     ).once('error', function (err) {
@@ -299,7 +315,7 @@ Grid.prototype.remove = function (options, callback) {
   } else {
     lockAndRemove();
   }
-}
+};
 
 /**
  * Checks if a file exists by passing an _id
@@ -314,7 +330,7 @@ Grid.prototype.exist = function (options, callback) {
         _id = this.tryParseObjectId(options._id) || options._id;
     }
     return this.mongo.GridStore.exist(this.db, _id, callback);
-}
+};
 
 /**
  * Attemps to parse `string` into an ObjectId
@@ -331,7 +347,7 @@ Grid.prototype.tryParseObjectId = function tryParseObjectId (string) {
   } catch (_) {
     return false;
   }
-}
+};
 
 /**
  * expose

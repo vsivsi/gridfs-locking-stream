@@ -171,7 +171,7 @@ By default, if the appropriate type of lock is not available when `createReadStr
 
 If [deadlocks](https://en.wikipedia.org/wiki/Deadlock) or dead lock-holding processes are an issue for your application, you may find the `lockExpiration` option to be useful. Note that when this option is used, the lock holder is responsible for finishing its use of the stream before the time expires. To support dealing with expirations, the stream will emit `'expired'` and `'expires-soon'` events. Streams are automatically destroyed before the `'expired'` event is emitted. When `'expires-soon'` is emitted, ~10% of the original lock lifetime remains. See `stream.renewLock()` below.
 
-Streams returned by `createReadStream` and `createWriteStream` each have three additional methods which can be used to inspect and change the status of the lock on a stream. Normally the acquisition and releasing of locks will be handled automatically when streams are created and end. However, depending on how the stream is accessed and the lock options being used, some special handling may be necessary.
+Streams returned by `createReadStream` and `createWriteStream` each have four additional methods which can be used to inspect and change the status of the lock on a stream. Normally the acquisition and releasing of locks will be handled automatically when streams are created and end. However, depending on how the stream is accessed and the lock options being used, some special handling may be necessary.
 
 ```js
 
@@ -192,12 +192,23 @@ lock_doc = stream.heldLock();
 }
 */
 
+// When a callback is needed when the lock has been released
+// either automatically or manually using stream.releaseLock()
+stream.lockReleased(function (e, d) {
+  if (e) {
+    // handle error
+  }
+  // d contains the lock document, or null if the lock was
+  // already released at the time lockReleased was called.
+});
+
+
 // When a lock needs to be manually released,
 // such as when a readstream is not read to the end.
 stream.releaseLock(function (e,d) {
   if (e) {
     // handle error
-  };
+  }
   // d contains the new lock document
 });
 
@@ -208,7 +219,7 @@ stream.on('expires-soon', function () {
   stream.renewLock(function (e,d) {
     if (e) {
       // handle error
-    };
+    }
     // d contains the new lock document
   });
 });
