@@ -225,6 +225,25 @@ describe('test', function(){
         ws.on('close', function () { done(); });
       });
     });
+    it('should emit expires-soon, renew once, and then expire', function(done) {
+      this.timeout(5000);
+      var renewed = false;
+      g.createWriteStream({ filename: 'expire_test.txt', lockExpiration: 2, pollingInterval: 1 }, function(e, ws) {
+        ws.once('expires-soon', function () {
+          ws.renewLock(function (err, doc) {
+            if (err) return done(err);
+            assert.ok(doc);
+            renewed = true;
+          });
+        });
+        ws.on('close', function () {
+          assert(renewed);
+          ws.lockReleased(function () {
+            done();
+          });
+        });
+      });
+    });
   });
 
   describe('createReadStream', function(){
@@ -378,6 +397,28 @@ describe('test', function(){
         rs.pause();
         rs.on('data', function (data) {});
         rs.on('close', function () {
+          rs.lockReleased(function () {
+            done();
+          });
+        });
+      });
+    });
+
+    it('should emit expires-soon, renew once, and then expire', function(done) {
+      this.timeout(5000);
+      var renewed = false;
+      g.createReadStream({ _id: id, lockExpiration: 2, pollingInterval: 1 }, function(e, rs) {
+        rs.pause();
+        rs.on('data', function (data) {});
+        rs.once('expires-soon', function () {
+          rs.renewLock(function (err, doc) {
+            if (err) return done(err);
+            assert.ok(doc);
+            renewed = true;
+          });
+        });
+        rs.on('close', function () {
+          assert(renewed);
           rs.lockReleased(function () {
             done();
           });

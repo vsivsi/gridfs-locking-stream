@@ -1,3 +1,7 @@
+### 1.1.1
+
+* Fixed event listener memory leak when renewing locks
+
 ### 1.1.0
 
 * Added stream.lockReleased() call to read and write stream objects

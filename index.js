@@ -87,8 +87,12 @@ Grid.prototype.createWriteStream = function (options, callback) {
         stream.renewLock = function (callback) {
           lock.renewLock();
           if (callback) {
-            lock.once('renewed', function (l) { callback(null, l); });
-            lock.once('error', function (e) { lock.removeAllListeners(); callback(e); });
+            errorCb = function (e) { lock.removeAllListeners(); callback(e); }
+            lock.once('renewed', function (l) {
+              lock.removeListener('error', errorCb);
+              callback(null, l);
+            });
+            lock.once('error', errorCb);
           }
         };
         stream.heldLock = function () {
@@ -184,8 +188,12 @@ Grid.prototype.createReadStream = function (options, callback) {
         stream.renewLock = function (callback) {
           lock.renewLock();
           if (callback) {
-            lock.once('renewed', function (l) { callback(null, l); });
-            lock.once('error', function (e) { lock.removeAllListeners(); callback(e); });
+            errorCb = function (e) { lock.removeAllListeners(); callback(e); }
+            lock.once('renewed', function (l) {
+              lock.removeListener('error', errorCb);
+              callback(null, l);
+            });
+            lock.once('error', errorCb);
           }
         };
         stream.heldLock = function () {
